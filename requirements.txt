@@ -1,0 +1,2 @@
+# This project intentionally uses only the Python standard library.
+# Add an SDK such as `openai` later if you want a richer provider integration.
