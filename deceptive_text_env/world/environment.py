@@ -9,7 +9,7 @@ from deceptive_text_env.world.judge import JudgeModel
 from deceptive_text_env.world.verifier import GroundedVerifier
 
 
-@dataclass(slots=True)
+@dataclass
 class EnvironmentState:
     current_location: str
     collected_sigils: list[str] = field(default_factory=list)

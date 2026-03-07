@@ -298,8 +298,9 @@ class BasePlanningAgent:
             self._apply_contradiction_decay(involved)
 
     def _apply_contradiction_decay(self, npc_names: list[str]) -> None:
+        no_decay_variants = {"naive", "belief_no_decay"}
         for npc_name in npc_names:
-            if self.variant == "naive":
+            if self.variant in no_decay_variants:
                 continue
             current = self.trust_scores.get(npc_name, 0.5)
             decayed = max(0.0, current - self.experiment_config.contradiction_decay)
@@ -309,6 +310,11 @@ class BasePlanningAgent:
         if self.variant == "naive":
             self.trust_scores[npc_name] = 0.99
             return
+        if self.variant == "belief_no_decay":
+            current = self.trust_scores.get(npc_name, 0.5)
+            gain = self.experiment_config.trust_success_gain * (1.0 - current)
+            self.trust_scores[npc_name] = min(1.0, current + gain)
+            return
         current = self.trust_scores.get(npc_name, 0.5)
         gain = self.experiment_config.trust_success_gain * (1.0 - current)
         self.trust_scores[npc_name] = min(1.0, current + gain)
@@ -316,6 +322,10 @@ class BasePlanningAgent:
     def _penalize_npc(self, npc_name: str, *, reason: str, turn_index: int) -> None:
         if self.variant == "naive":
             self.trust_scores[npc_name] = max(0.75, self.trust_scores.get(npc_name, 0.95) - 0.05)
+            return
+        if self.variant == "belief_no_decay":
+            # Ablation: no trust penalty on failure
+            self.trace.append(f"(ablation: no decay) {npc_name}: {reason}")
             return
         current = self.trust_scores.get(npc_name, 0.5)
         decayed = max(0.0, current * (1.0 - self.experiment_config.trust_failure_decay) - 0.05)
@@ -354,6 +364,20 @@ class ReflectionEnhancedAgent(BasePlanningAgent):
         super().__init__(variant="reflection_enhanced", llm_client=llm_client, model_config=model_config, experiment_config=experiment_config)
 
 
+class BeliefNoDecayAgent(BasePlanningAgent):
+    """Ablation: belief-tracking but trust never decreases on failure."""
+
+    def __init__(self, *, llm_client: BaseLLMClient, model_config: ModelConfig, experiment_config: ExperimentConfig) -> None:
+        super().__init__(variant="belief_no_decay", llm_client=llm_client, model_config=model_config, experiment_config=experiment_config)
+
+
+class MemoryWithTrustAgent(BasePlanningAgent):
+    """Ablation: memory-augmented + trust scores (but no reflection)."""
+
+    def __init__(self, *, llm_client: BaseLLMClient, model_config: ModelConfig, experiment_config: ExperimentConfig) -> None:
+        super().__init__(variant="memory_with_trust", llm_client=llm_client, model_config=model_config, experiment_config=experiment_config)
+
+
 def build_agent(
     *,
     variant: str,
@@ -366,6 +390,8 @@ def build_agent(
         "memory_augmented": MemoryAugmentedAgent,
         "belief_tracking": BeliefTrackingAgent,
         "reflection_enhanced": ReflectionEnhancedAgent,
+        "belief_no_decay": BeliefNoDecayAgent,
+        "memory_with_trust": MemoryWithTrustAgent,
     }
     if variant not in registry:
         raise ValueError(f"Unknown agent variant: {variant}")

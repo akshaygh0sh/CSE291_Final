@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import random
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable
 
 from deceptive_text_env.agents import build_agent
@@ -13,20 +15,58 @@ from deceptive_text_env.world import GroundedVerifier, JudgeModel, TextWorldEnvi
 
 
 class EvaluationRunner:
-    def __init__(self, config: FrameworkConfig) -> None:
+    def __init__(self, config: FrameworkConfig, *, use_advanced_npcs: bool = False, spread_locations: bool = False) -> None:
         self.config = config
+        self.use_advanced_npcs = use_advanced_npcs
+        self.spread_locations = spread_locations
         self.agent_client = create_llm_client(config.premium_agent_model)
         self.npc_client = create_llm_client(config.budget_npc_model)
         self.judge_client = create_llm_client(config.judge_model)
 
-    def run_all(self, agent_variants: Iterable[str]) -> tuple[list[EpisodeResult], dict[str, dict[str, float]]]:
-        results: list[EpisodeResult] = []
+    def run_all(
+        self,
+        agent_variants: Iterable[str],
+        *,
+        max_workers: int = 1,
+    ) -> tuple[list[EpisodeResult], dict[str, dict[str, float]]]:
+        jobs: list[tuple[str, float, int]] = []
         for liar_ratio in self.config.experiment.liar_ratios:
             for variant in agent_variants:
                 for run_index in range(self.config.experiment.runs_per_setting):
                     seed = self._seed_for(variant, liar_ratio, run_index)
-                    results.append(self.run_episode(agent_variant=variant, liar_ratio=liar_ratio, seed=seed))
-        return results, aggregate_results(results)
+                    jobs.append((variant, liar_ratio, seed))
+
+        if max_workers <= 1:
+            results: list[EpisodeResult] = []
+            for i, (variant, lr, seed) in enumerate(jobs, 1):
+                print(f"  [{i}/{len(jobs)}] {variant} @ LR={lr} (seed={seed})", flush=True)
+                results.append(self.run_episode(agent_variant=variant, liar_ratio=lr, seed=seed))
+                print(f"    -> {'SUCCESS' if results[-1].success else 'FAIL'} in {results[-1].steps} steps", flush=True)
+            return results, aggregate_results(results)
+
+        # Parallel execution
+        results = [None] * len(jobs)
+        total = len(jobs)
+        completed = 0
+        print(f"Running {total} episodes with {max_workers} threads...", flush=True)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_idx = {}
+            for idx, (variant, lr, seed) in enumerate(jobs):
+                future = executor.submit(self.run_episode, agent_variant=variant, liar_ratio=lr, seed=seed)
+                future_to_idx[future] = (idx, variant, lr)
+            for future in as_completed(future_to_idx):
+                idx, variant, lr = future_to_idx[future]
+                completed += 1
+                try:
+                    result = future.result()
+                    results[idx] = result
+                    status = "SUCCESS" if result.success else "FAIL"
+                    print(f"  [{completed}/{total}] {variant} @ LR={lr} -> {status} in {result.steps} steps", flush=True)
+                except Exception as e:
+                    print(f"  [{completed}/{total}] {variant} @ LR={lr} -> ERROR: {e}", file=sys.stderr, flush=True)
+                    raise
+
+        return [r for r in results if r is not None], aggregate_results([r for r in results if r is not None])
 
     def run_episode(self, *, agent_variant: str, liar_ratio: float, seed: int) -> EpisodeResult:
         random.seed(seed)
@@ -38,6 +78,8 @@ class EvaluationRunner:
             liar_ratio=liar_ratio,
             llm_client=self.npc_client,
             model_config=self.config.budget_npc_model,
+            use_advanced_strategies=self.use_advanced_npcs,
+            spread_locations=self.spread_locations,
         )
         environment = TextWorldEnvironment(
             world_config=self.config.world,

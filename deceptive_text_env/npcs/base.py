@@ -11,7 +11,7 @@ from deceptive_text_env.world.judge import JudgeModel
 from deceptive_text_env.world.verifier import GroundedVerifier
 
 
-@dataclass(slots=True)
+@dataclass
 class BaseNPC:
     name: str
     location: str
@@ -139,6 +139,10 @@ class BaseNPC:
             chosen_value = false_candidates[0]
         elif self.policy == "opportunistic" and self.turn_counter >= self.pivot_turn and false_candidates:
             chosen_value = false_candidates[0]
+        elif self.policy == "partial_truth" and topic == "vault_order" and false_candidates:
+            chosen_value = false_candidates[0]
+        elif self.policy == "coordinated_deceptive" and agent_trust >= 0.50 and false_candidates:
+            chosen_value = false_candidates[0]
         text = self._format_claim_text(topic, chosen_value)
         return NPCMessage(
             npc_name=self.name,
@@ -180,6 +184,41 @@ class OpportunisticNPC(BaseNPC):
         )
 
 
+class PartialTruthNPC(BaseNPC):
+    """Gives correct sigil locations but always lies about vault_order."""
+
+    def __init__(self, *, name: str, location: str, llm_client: BaseLLMClient, model_config: ModelConfig) -> None:
+        super().__init__(name=name, location=location, llm_client=llm_client, model_config=model_config, policy="partial_truth")
+
+
+class CoordinatedDeceptiveNPC(BaseNPC):
+    """Lies when trust >= 0.50 (lower threshold). Multiple instances give the SAME wrong answer."""
+
+    def __init__(self, *, name: str, location: str, llm_client: BaseLLMClient, model_config: ModelConfig) -> None:
+        super().__init__(name=name, location=location, llm_client=llm_client, model_config=model_config, policy="coordinated_deceptive")
+
+
+NPC_NAMES = [
+    "Aster", "Bram", "Cyra", "Dorian", "Elara",
+    "Fenn", "Galen", "Helia", "Isolde", "Jarek",
+]
+
+# When spread_locations=True, NPCs get placed across the world.
+# First 3 at village_square, rest distributed to outer locations.
+SPREAD_LOCATIONS = [
+    "village_square",
+    "village_square",
+    "village_square",
+    "forest_shrine",
+    "cave_pool",
+    "river_dock",
+    "forest_shrine",
+    "cave_pool",
+    "river_dock",
+    "village_square",
+]
+
+
 def build_npc_roster(
     *,
     total_npcs: int,
@@ -187,38 +226,53 @@ def build_npc_roster(
     llm_client: BaseLLMClient,
     model_config: ModelConfig,
     location: str = "village_square",
+    use_advanced_strategies: bool = False,
+    spread_locations: bool = False,
 ) -> list[BaseNPC]:
-    liar_count = max(1, int(round(total_npcs * liar_ratio)))
-    liar_count = min(liar_count, max(total_npcs - 1, 1))
-    truthful_count = max(total_npcs - liar_count, 1)
-    deceptive_count = liar_count // 2
-    opportunistic_count = liar_count - deceptive_count
+    liar_count = max(0, int(round(total_npcs * liar_ratio)))
+    liar_count = min(liar_count, max(total_npcs - 1, 0))
+    truthful_count = total_npcs - liar_count
 
-    names = [
-        "Aster",
-        "Bram",
-        "Cyra",
-        "Dorian",
-        "Elara",
-        "Fenn",
-        "Galen",
-        "Helia",
-        "Isolde",
-        "Jarek",
-    ]
+    if use_advanced_strategies and liar_count >= 3:
+        deceptive_count = max(1, liar_count // 3)
+        partial_truth_count = max(1, liar_count // 3)
+        coordinated_count = liar_count - deceptive_count - partial_truth_count
+        opportunistic_count = 0
+    elif use_advanced_strategies and liar_count == 2:
+        deceptive_count = 1
+        partial_truth_count = 1
+        coordinated_count = 0
+        opportunistic_count = 0
+    else:
+        deceptive_count = liar_count // 2
+        opportunistic_count = liar_count - deceptive_count
+        partial_truth_count = 0
+        coordinated_count = 0
+
+    def loc(index: int) -> str:
+        if spread_locations:
+            return SPREAD_LOCATIONS[index % len(SPREAD_LOCATIONS)]
+        return location
+
     roster: list[BaseNPC] = []
     index = 0
 
     for _ in range(truthful_count):
-        roster.append(TruthfulNPC(name=names[index], location=location, llm_client=llm_client, model_config=model_config))
+        roster.append(TruthfulNPC(name=NPC_NAMES[index], location=loc(index), llm_client=llm_client, model_config=model_config))
         index += 1
     for _ in range(deceptive_count):
-        roster.append(DeceptiveNPC(name=names[index], location=location, llm_client=llm_client, model_config=model_config))
+        roster.append(DeceptiveNPC(name=NPC_NAMES[index], location=loc(index), llm_client=llm_client, model_config=model_config))
         index += 1
     for _ in range(opportunistic_count):
         roster.append(
-            OpportunisticNPC(name=names[index], location=location, llm_client=llm_client, model_config=model_config, pivot_turn=3)
+            OpportunisticNPC(name=NPC_NAMES[index], location=loc(index), llm_client=llm_client, model_config=model_config, pivot_turn=3)
         )
+        index += 1
+    for _ in range(partial_truth_count):
+        roster.append(PartialTruthNPC(name=NPC_NAMES[index], location=loc(index), llm_client=llm_client, model_config=model_config))
+        index += 1
+    for _ in range(coordinated_count):
+        roster.append(CoordinatedDeceptiveNPC(name=NPC_NAMES[index], location=loc(index), llm_client=llm_client, model_config=model_config))
         index += 1
 
     return roster[:total_npcs]

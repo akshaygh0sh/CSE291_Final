@@ -2,18 +2,16 @@
 Run experiments across multiple liar ratios and print a comparison table.
 
 Usage:
-  python run_liar_ratio_comparison.py
-
-Uses default config (mock LLM). Compares all four agent variants across
-liar_ratios [0.1, 0.3, 0.5] and prints task success rate, inference accuracy,
-average steps, and recovery rate.
+  python run_liar_ratio_comparison.py               # mock
+  python run_liar_ratio_comparison.py --mode full    # real TritonAI LLM
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 
-from deceptive_text_env import build_default_config
+from deceptive_text_env import build_default_config, build_hybrid_config, build_tritonai_config
 from deceptive_text_env.evaluation import EvaluationRunner
 
 
@@ -46,14 +44,24 @@ def format_table(
 
 
 def main() -> int:
-    config = build_default_config()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=["mock", "hybrid", "full"], default="mock")
+    args = parser.parse_args()
+
+    if args.mode == "full":
+        config = build_tritonai_config()
+    elif args.mode == "hybrid":
+        config = build_hybrid_config()
+    else:
+        config = build_default_config()
+
     variants = ["naive", "memory_augmented", "belief_tracking", "reflection_enhanced"]
     liar_ratios = config.experiment.liar_ratios
 
     runner = EvaluationRunner(config)
     results, summary = runner.run_all(variants)
 
-    print("Liar ratio comparison (mock LLM)")
+    print(f"Liar ratio comparison ({args.mode} LLM)")
     print(f"Variants: {variants}")
     print(f"Liar ratios: {liar_ratios}")
     print(f"Runs per setting: {config.experiment.runs_per_setting}")

@@ -1,0 +1,430 @@
+{
+  "summary": {
+    "naive@0.0": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.9566666666666667,
+      "avg_recovery_rate": -1.0
+    },
+    "belief_tracking@0.0": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.5572999999999999,
+      "avg_recovery_rate": -1.0
+    },
+    "naive@0.1": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.962,
+      "avg_recovery_rate": -1.0
+    },
+    "belief_tracking@0.1": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.5658116,
+      "avg_recovery_rate": -1.0
+    },
+    "naive@0.3": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.6983333333333333,
+      "avg_recovery_rate": -1.0
+    },
+    "belief_tracking@0.3": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.5989666666666666,
+      "avg_recovery_rate": -1.0
+    },
+    "naive@0.5": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.555,
+      "avg_recovery_rate": -1.0
+    },
+    "belief_tracking@0.5": {
+      "task_success_rate": 1.0,
+      "avg_steps": 15,
+      "avg_inference_accuracy": 0.5989666666666666,
+      "avg_recovery_rate": -1.0
+    }
+  },
+  "episodes": [
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.0,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.9566666666666667,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful",
+        "Fenn": "truthful"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.0,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.9566666666666667,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful",
+        "Fenn": "truthful"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.0,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5572999999999999,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful",
+        "Fenn": "truthful"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.0,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5572999999999999,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful",
+        "Fenn": "truthful"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.1,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.966,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.99,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.1,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.958,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.1,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5628632,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.724316,
+        "Bram": 0.59,
+        "Cyra": 0.5,
+        "Dorian": 0.5,
+        "Elara": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.1,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5687599999999999,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "truthful"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.3,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.6983333333333333,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "deceptive",
+        "Fenn": "partial_truth"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.3,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.6983333333333333,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "deceptive",
+        "Fenn": "partial_truth"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.3,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5989666666666666,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "deceptive",
+        "Fenn": "partial_truth"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.3,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5989666666666666,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "truthful",
+        "Elara": "deceptive",
+        "Fenn": "partial_truth"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.5,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5483333333333333,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.95,
+        "Cyra": 0.95,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "deceptive",
+        "Elara": "partial_truth",
+        "Fenn": "coordinated_deceptive"
+      }
+    },
+    {
+      "agent_variant": "naive",
+      "liar_ratio": 0.5,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5616666666666668,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.99,
+        "Bram": 0.99,
+        "Cyra": 0.99,
+        "Dorian": 0.95,
+        "Elara": 0.95,
+        "Fenn": 0.95
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "deceptive",
+        "Elara": "partial_truth",
+        "Fenn": "coordinated_deceptive"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.5,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5989666666666666,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "deceptive",
+        "Elara": "partial_truth",
+        "Fenn": "coordinated_deceptive"
+      }
+    },
+    {
+      "agent_variant": "belief_tracking",
+      "liar_ratio": 0.5,
+      "success": true,
+      "steps": 15,
+      "inference_accuracy": 0.5989666666666666,
+      "recovery_rate": null,
+      "final_trust_scores": {
+        "Aster": 0.6638,
+        "Bram": 0.59,
+        "Cyra": 0.59,
+        "Dorian": 0.5,
+        "Elara": 0.5,
+        "Fenn": 0.5
+      },
+      "hidden_roles": {
+        "Aster": "truthful",
+        "Bram": "truthful",
+        "Cyra": "truthful",
+        "Dorian": "deceptive",
+        "Elara": "partial_truth",
+        "Fenn": "coordinated_deceptive"
+      }
+    }
+  ]
+}

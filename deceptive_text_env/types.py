@@ -4,20 +4,20 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 
-@dataclass(slots=True)
+@dataclass
 class Claim:
     fact_id: str
     claimed_value: Any
     natural_language: str
 
 
-@dataclass(slots=True)
+@dataclass
 class VerifiedClaim(Claim):
     expected_value: Any
     is_true: bool
 
 
-@dataclass(slots=True)
+@dataclass
 class NPCMessage:
     npc_name: str
     policy: str
@@ -27,14 +27,14 @@ class NPCMessage:
     turn_index: int
 
 
-@dataclass(slots=True)
+@dataclass
 class NPCJudgement:
     compliant: bool
     issues: list[str]
     summary: str
 
 
-@dataclass(slots=True)
+@dataclass
 class Observation:
     turn_index: int
     location: str
@@ -48,7 +48,7 @@ class Observation:
     last_event: str
 
 
-@dataclass(slots=True)
+@dataclass
 class AgentAction:
     action_type: str
     target: str = ""
@@ -57,7 +57,7 @@ class AgentAction:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(slots=True)
+@dataclass
 class StepResult:
     observation: Observation
     success: bool
@@ -70,7 +70,7 @@ class StepResult:
     contradiction_fact_ids: list[str] = field(default_factory=list)
 
 
-@dataclass(slots=True)
+@dataclass
 class NPCStatementRecord:
     turn_index: int
     npc_name: str
@@ -81,7 +81,7 @@ class NPCStatementRecord:
     trust_at_record: float
 
 
-@dataclass(slots=True)
+@dataclass
 class ContradictionRecord:
     turn_index: int
     fact_id: str
@@ -90,7 +90,7 @@ class ContradictionRecord:
     disproven_value: Any | None = None
 
 
-@dataclass(slots=True)
+@dataclass
 class EnvironmentFactRecord:
     turn_index: int
     fact_id: str
@@ -98,7 +98,7 @@ class EnvironmentFactRecord:
     source: str
 
 
-@dataclass(slots=True)
+@dataclass
 class EpisodeResult:
     agent_variant: str
     liar_ratio: float

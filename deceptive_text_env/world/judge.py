@@ -79,4 +79,15 @@ class JudgeModel:
             if turn_index >= pivot_turn and all(truths):
                 compliant = False
                 issues.append("Post-pivot opportunistic policy violation.")
+        if policy == "partial_truth":
+            for claim in verified_claims:
+                if claim.fact_id.startswith("location_of:") and not claim.is_true:
+                    compliant = False
+                    issues.append("Partial-truth NPC should be truthful about sigil locations.")
+                if claim.fact_id == "vault_order" and claim.is_true:
+                    compliant = False
+                    issues.append("Partial-truth NPC should lie about vault order.")
+        if policy == "coordinated_deceptive" and agent_trust >= 0.50 and any(truths):
+            compliant = False
+            issues.append("Coordinated deceptive NPC should lie when trust >= 0.50.")
         return NPCJudgement(compliant=compliant, issues=issues, summary=json.dumps({"issues": issues}))

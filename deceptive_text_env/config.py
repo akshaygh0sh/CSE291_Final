@@ -4,17 +4,19 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-@dataclass(slots=True)
+@dataclass
 class ModelConfig:
     provider: str
     model_name: str
-    api_key_env_var: str = "OPENAI_API_KEY"
-    base_url: str = "https://api.openai.com/v1"
+    api_key_env_var: str = "TRITONAI_API_KEY"
+    base_url: str = "https://tritonai-api.ucsd.edu/v1"
     temperature: float = 0.2
-    timeout_seconds: int = 45
+    timeout_seconds: int = 300
+    max_tokens: int = 1024
+    seed: int = 42
 
 
-@dataclass(slots=True)
+@dataclass
 class WorldConfig:
     start_location: str = "village_square"
     location_graph: dict[str, list[str]] = field(
@@ -53,12 +55,12 @@ class WorldConfig:
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class ExperimentConfig:
     max_steps: int = 24
-    runs_per_setting: int = 3
+    runs_per_setting: int = 10
     total_npcs: int = 6
-    liar_ratios: list[float] = field(default_factory=lambda: [0.1, 0.3, 0.5])
+    liar_ratios: list[float] = field(default_factory=lambda: [0.0, 0.1, 0.3, 0.5])
     reflection_interval: int = 4
     trust_success_gain: float = 0.18
     trust_failure_decay: float = 0.42
@@ -69,11 +71,13 @@ class ExperimentConfig:
             "truthful": 1.0,
             "deceptive": 0.0,
             "opportunistic": 0.35,
+            "partial_truth": 0.25,
+            "coordinated_deceptive": 0.0,
         }
     )
 
 
-@dataclass(slots=True)
+@dataclass
 class FrameworkConfig:
     premium_agent_model: ModelConfig = field(
         default_factory=lambda: ModelConfig(
@@ -102,4 +106,146 @@ class FrameworkConfig:
 
 
 def build_default_config() -> FrameworkConfig:
+    """Default config using mock LLM for fast local testing."""
     return FrameworkConfig()
+
+
+def build_tritonai_config() -> FrameworkConfig:
+    """Config using the UCSD TritonAI API for real LLM experiments."""
+    return FrameworkConfig(
+        premium_agent_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.1,
+            max_tokens=1024,
+            seed=42,
+        ),
+        budget_npc_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.3,
+            max_tokens=512,
+            seed=42,
+        ),
+        judge_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.0,
+            max_tokens=512,
+            seed=42,
+        ),
+        experiment=ExperimentConfig(
+            max_steps=24,
+            runs_per_setting=3,
+            total_npcs=6,
+            liar_ratios=[0.0, 0.1, 0.3, 0.5],
+        ),
+    )
+
+
+def build_hybrid_config() -> FrameworkConfig:
+    """Real LLM agent + mock NPCs (cheap iteration)."""
+    return FrameworkConfig(
+        premium_agent_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.1,
+            max_tokens=1024,
+            seed=42,
+        ),
+        budget_npc_model=ModelConfig(
+            provider="mock",
+            model_name="mock-npc",
+            temperature=0.3,
+        ),
+        judge_model=ModelConfig(
+            provider="mock",
+            model_name="mock-judge",
+            temperature=0.0,
+        ),
+        experiment=ExperimentConfig(
+            max_steps=24,
+            runs_per_setting=3,
+            total_npcs=6,
+            liar_ratios=[0.0, 0.1, 0.3, 0.5],
+        ),
+    )
+
+
+def build_hard_config() -> FrameworkConfig:
+    """Hard mode: reduced step budget (18) + NPCs spread across locations.
+    All components use real LLM."""
+    return FrameworkConfig(
+        premium_agent_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.1,
+            max_tokens=1024,
+            seed=42,
+        ),
+        budget_npc_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.3,
+            max_tokens=512,
+            seed=42,
+        ),
+        judge_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.0,
+            max_tokens=512,
+            seed=42,
+        ),
+        experiment=ExperimentConfig(
+            max_steps=18,
+            runs_per_setting=3,
+            total_npcs=6,
+            liar_ratios=[0.0, 0.1, 0.3, 0.5],
+        ),
+    )
+
+
+def build_hard_hybrid_config() -> FrameworkConfig:
+    """Hard mode with mock NPCs: reduced step budget (18) + NPCs spread across locations."""
+    return FrameworkConfig(
+        premium_agent_model=ModelConfig(
+            provider="tritonai",
+            model_name="api-gpt-oss-120b",
+            api_key_env_var="TRITONAI_API_KEY",
+            base_url="https://tritonai-api.ucsd.edu/v1",
+            temperature=0.1,
+            max_tokens=1024,
+            seed=42,
+        ),
+        budget_npc_model=ModelConfig(
+            provider="mock",
+            model_name="mock-npc",
+            temperature=0.3,
+        ),
+        judge_model=ModelConfig(
+            provider="mock",
+            model_name="mock-judge",
+            temperature=0.0,
+        ),
+        experiment=ExperimentConfig(
+            max_steps=18,
+            runs_per_setting=3,
+            total_npcs=6,
+            liar_ratios=[0.0, 0.1, 0.3, 0.5],
+        ),
+    )

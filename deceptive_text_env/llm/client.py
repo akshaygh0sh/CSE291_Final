@@ -3,12 +3,45 @@ from __future__ import annotations
 import json
 import os
 import random
+import time
 import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
+import requests
+
 from deceptive_text_env.config import ModelConfig
+
+_LOG_DIR: Path | None = None
+_LOG_COUNTER = 0
+
+
+def enable_call_logging(log_dir: str = "llm_logs") -> None:
+    """Enable saving every LLM call to a JSONL file."""
+    global _LOG_DIR
+    _LOG_DIR = Path(log_dir)
+    _LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _log_call(task: str, model: str, messages: list, response_content: str, parsed: dict) -> None:
+    global _LOG_COUNTER
+    if _LOG_DIR is None:
+        return
+    _LOG_COUNTER += 1
+    entry = {
+        "call_index": _LOG_COUNTER,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "task": task,
+        "model": model,
+        "messages": messages,
+        "raw_response": response_content,
+        "parsed_json": parsed,
+    }
+    log_file = _LOG_DIR / "calls.jsonl"
+    with open(log_file, "a") as f:
+        f.write(json.dumps(entry) + "\n")
 
 
 class BaseLLMClient(ABC):
@@ -23,6 +56,56 @@ class BaseLLMClient(ABC):
         model_config: ModelConfig,
     ) -> dict[str, Any]:
         raise NotImplementedError
+
+
+class TritonAIClient(BaseLLMClient):
+    """Client for the UCSD TritonAI API (OpenAI-compatible)."""
+
+    def generate_json(
+        self,
+        *,
+        task: str,
+        system_prompt: str,
+        user_prompt: str,
+        payload: dict[str, Any],
+        model_config: ModelConfig,
+    ) -> dict[str, Any]:
+        api_key = os.getenv(model_config.api_key_env_var, "")
+        if not api_key:
+            raise RuntimeError(
+                f"Environment variable '{model_config.api_key_env_var}' is not set."
+            )
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
+        body = {
+            "model": model_config.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": f"Task: {task}\n\nInstructions:\n{user_prompt}\n\nPayload:\n{json.dumps(payload, indent=2)}",
+                },
+            ],
+            "temperature": model_config.temperature,
+            "max_tokens": model_config.max_tokens,
+            "max_completion_tokens": model_config.max_tokens,
+            "seed": model_config.seed,
+        }
+        response = requests.post(
+            f"{model_config.base_url.rstrip('/')}/chat/completions",
+            headers=headers,
+            json=body,
+            timeout=model_config.timeout_seconds,
+        )
+        response.raise_for_status()
+        response_payload = response.json()
+        content = response_payload["choices"][0]["message"]["content"]
+        parsed = _safe_parse_json(content)
+        _log_call(task, model_config.model_name, body["messages"], content, parsed)
+        return parsed
 
 
 class OpenAICompatibleLLMClient(BaseLLMClient):
@@ -112,6 +195,13 @@ class MockLLMClient(BaseLLMClient):
             chosen_value = fallback_false if trust >= 0.65 else true_value
         elif policy == "opportunistic":
             chosen_value = true_value if turn_index < pivot_turn else fallback_false
+        elif policy == "partial_truth":
+            if topic == "vault_order":
+                chosen_value = fallback_false
+            else:
+                chosen_value = true_value
+        elif policy == "coordinated_deceptive":
+            chosen_value = fallback_false if trust >= 0.50 else true_value
         else:
             chosen_value = true_value
 
@@ -150,6 +240,12 @@ class MockLLMClient(BaseLLMClient):
             if turn_index >= pivot_turn and all(truths):
                 compliant = False
                 issues.append("Opportunistic NPC should pivot toward deception after the pivot turn.")
+        elif policy == "partial_truth":
+            pass
+        elif policy == "coordinated_deceptive":
+            if trust >= 0.50 and any(truths):
+                compliant = False
+                issues.append("Coordinated deceptive NPC should lie when trust >= 0.5.")
 
         return {
             "compliant": compliant,
@@ -396,6 +492,8 @@ class MockLLMClient(BaseLLMClient):
 def create_llm_client(model_config: ModelConfig) -> BaseLLMClient:
     if model_config.provider == "mock":
         return MockLLMClient()
+    if model_config.provider == "tritonai":
+        return TritonAIClient()
     if model_config.provider in {"openai", "openai-compatible"}:
         return OpenAICompatibleLLMClient()
     raise ValueError(f"Unsupported LLM provider: {model_config.provider}")
